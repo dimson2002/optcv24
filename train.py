@@ -39,8 +39,19 @@ def show_images(trainloader):
     # print labels
     print(' '.join(f'{classes[labels[j]]:5s}' for j in range()))
 
+def plot_loss(losses, optimizer_n):
+    plt.figure()
+    plt.plot(range(1, len(losses) + 1), losses, marker='o', label=f'Loss ({optimizer_n})')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title(f'Training Loss per Epoch ({optimizer_n})')
+    plt.legend()
+    plt.grid()
+    plt.savefig(f'loss_plot_{optimizer_n}.png')
+    plt.close()
+    print(f"Loss plot saved as 'loss_plot_{optimizer_n}.png'")
 
-def train():
+def train(optimizer_n):
     print('Load data')
     transform = transforms.Compose(
         [transforms.ToTensor(),
@@ -56,11 +67,16 @@ def train():
     import torch.optim as optim
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    if optimizer_n == 'SGD':
+        optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    elif optimizer_n == 'Adagrad':
+        optimizer = optim.Adagrad(net.parameters(), lr=0.001)
 
-    for epoch in range(1):  # loop over the dataset multiple times
-
+    #optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
+    losses = []
+    for epoch in range(10):  # loop over the dataset multiple times
         running_loss = 0.0
+        epoch_loss = 0.0
         for i, data in enumerate(trainloader, 0):
             # get the inputs; data is a list of [inputs, labels]
             inputs, labels = data
@@ -76,15 +92,20 @@ def train():
 
             # print statistics
             running_loss += loss.item()
+            epoch_loss += loss.item()
             if i % 2000 == 1999:    # print every 2000 mini-batches
                 print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.3f}')
                 running_loss = 0.0
+        avg_loss = epoch_loss / len(trainloader)
+        losses.append(avg_loss)
 
+    plot_loss(losses, optimizer_n)
     print('Finished Training')
     os.makedirs('models', exist_ok=True)
 
-    torch.save(net.state_dict(), model_path)
+    torch.save(net.state_dict(), f'models/{optimizer_n}_model.pth')
 
-
+#writer = SummaryWriter('SGD')
 if __name__ == '__main__':
-    train()
+    train(optimizer_n='SGD')
+    train(optimizer_n='Adagrad')
