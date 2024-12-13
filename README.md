@@ -25,8 +25,6 @@
         train(optimizer_n='SGD')
         train(optimizer_n='Adagrad')
 
-![loss_plot_SGD.png](loss_plot_SGD.png)
-
-![loss_plot_Adagrad.png](loss_plot_Adagrad.png)
+![loss_plot_comparison.png](loss_plot_comparison.png)
 
 По графикам можно сказать, что SGD справился лучше. Но хотелось бы отметить, что при наибольшем количестве эпох, я считаю, лучше справится Adagrad, так как он лучше адаптируется под данные. Также вместо, Adagrad можно использовать Adam, так как он совмещает в себе преимущества Adagrad и RMSProb.

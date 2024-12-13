@@ -39,17 +39,18 @@ def show_images(trainloader):
     # print labels
     print(' '.join(f'{classes[labels[j]]:5s}' for j in range()))
 
-def plot_loss(losses, optimizer_n):
+def plot_loss(losses_dict):
     plt.figure()
-    plt.plot(range(1, len(losses) + 1), losses, marker='o', label=f'Loss ({optimizer_n})')
+    for optimizer_n, losses in losses_dict.items():
+        plt.plot(range(1, len(losses) + 1), losses, marker='o', label=f'Loss ({optimizer_n})')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.title(f'Training Loss per Epoch ({optimizer_n})')
+    plt.title(f'Training Loss per Epoch')
     plt.legend()
     plt.grid()
-    plt.savefig(f'loss_plot_{optimizer_n}.png')
+    plt.savefig(f'loss_plot_comparison.png')
     plt.close()
-    print(f"Loss plot saved as 'loss_plot_{optimizer_n}.png'")
+    print(f"Loss plot saved as 'loss_plot_comparison.png'")
 
 def train(optimizer_n):
     print('Load data')
@@ -99,13 +100,17 @@ def train(optimizer_n):
         avg_loss = epoch_loss / len(trainloader)
         losses.append(avg_loss)
 
-    plot_loss(losses, optimizer_n)
+    # plot_loss(losses, optimizer_n)
     print('Finished Training')
     os.makedirs('models', exist_ok=True)
 
     torch.save(net.state_dict(), f'models/{optimizer_n}_model.pth')
-
+    return losses
 #writer = SummaryWriter('SGD')
 if __name__ == '__main__':
-    train(optimizer_n='SGD')
-    train(optimizer_n='Adagrad')
+    sgd_losses = train(optimizer_n='SGD')
+    adagrad_losses = train(optimizer_n='Adagrad')
+
+    losses_dict = {'SGD': sgd_losses,
+                   'Adagrad': adagrad_losses}
+    plot_loss(losses_dict)
