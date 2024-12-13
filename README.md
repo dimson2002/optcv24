@@ -37,3 +37,18 @@
 **ПОЧЕМУ ТАК ВЫШЛО?**
 
 Adagrad сильно адаптирует шаг обучения, и в данноом случае он, вероятно, слишком быстро становится маленьким. Это приводит к медленной сходимости по сравнению с более "агрессивным" и постоянным шагом у SGD.
+
+
+
+    Study statistics: 
+    Number of finished trials:  100
+    Number of pruned trials:  78
+    Number of complete trials:  22
+    Best trial:
+      Value:  0.5
+    Params: 
+        n_layers: 1
+        n_units_l0: 302
+        dropout_l0: 0.20513131103910964
+        optimizer: RMSprop
+        lr: 0.0006119827290096727

@@ -112,7 +112,7 @@ def objective(trial):
                 # Limiting validation data.
                 if batch_idx * BATCHSIZE >= N_VALID_EXAMPLES:
                     break
-                data, target = data.view(data.size(0), -1).to(DEVICE), target.to(DEVICE)
+                data, target = data.to(DEVICE), target.to(DEVICE)
                 output = model(data)
                 # Get the index of the max log-probability.
                 pred = output.argmax(dim=1, keepdim=True)
