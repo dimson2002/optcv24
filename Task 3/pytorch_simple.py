@@ -20,6 +20,7 @@ import torch.utils.data
 from torchvision import datasets
 from torchvision import transforms
 
+from train import train
 
 DEVICE = torch.device("cpu")
 BATCHSIZE = 128
@@ -33,34 +34,41 @@ N_VALID_EXAMPLES = BATCHSIZE * 10
 def define_model(trial):
     # We optimize the number of layers, hidden units and dropout ratio in each layer.
     n_layers = trial.suggest_int("n_layers", 1, 5)
-    layers = []
+    conv_layers = []
+    conv_layers.append(nn.Conv2d(3, 16, kernel_size=3, padding=1))
+    conv_layers.append(nn.ReLU())
+    conv_layers.append(nn.MaxPool2d(2, 2))
 
-    in_features = 28 * 28
+    model_layers = []
+    model_layers.extend(conv_layers)
+    model_layers.append(nn.Flatten())
+
+    in_features = 16 * 16 * 16
     for i in range(n_layers):
-        out_features = trial.suggest_int("n_units_l{}".format(i), 4, 128)
-        layers.append(nn.Conv2D(in_features, out_features))
-        layers.append(nn.Flatten())
-        layers.append(nn.Linear(in_features, out_features))
-        layers.append(nn.ReLU())
+        out_features = trial.suggest_int("n_units_l{}".format(i), 32, 512)
+        model_layers.append(nn.Linear(in_features, out_features))
+        model_layers.append(nn.ReLU())
         p = trial.suggest_float("dropout_l{}".format(i), 0.2, 0.5)
-        layers.append(nn.Dropout(p))
+        model_layers.append(nn.Dropout(p))
 
         in_features = out_features
-    layers.append(nn.Linear(in_features, CLASSES))
-    layers.append(nn.LogSoftmax(dim=1))
 
-    return nn.Sequential(*layers)
+    model_layers.append(nn.Linear(in_features, CLASSES))
+    model_layers.append(nn.LogSoftmax(dim=1))
+
+    return nn.Sequential(*model_layers)
 
 
-def get_mnist():
+def get_cifar10():
     # Load FashionMNIST dataset.
+    transform = transforms.Compose([transforms.ToTensor()])
     train_loader = torch.utils.data.DataLoader(
-        datasets.FashionMNIST(DIR, train=True, download=True, transform=transforms.ToTensor()),
+        datasets.CIFAR10(DIR, train=True, download=True, transform=transform),
         batch_size=BATCHSIZE,
         shuffle=True,
     )
     valid_loader = torch.utils.data.DataLoader(
-        datasets.FashionMNIST(DIR, train=False, transform=transforms.ToTensor()),
+        datasets.CIFAR10(DIR, train=False, transform=transform),
         batch_size=BATCHSIZE,
         shuffle=True,
     )
@@ -78,7 +86,7 @@ def objective(trial):
     optimizer = getattr(optim, optimizer_name)(model.parameters(), lr=lr)
 
     # Get the FashionMNIST dataset.
-    train_loader, valid_loader = get_mnist()
+    train_loader, valid_loader = get_cifar10()
 
     # Training of the model.
     for epoch in range(EPOCHS):
@@ -88,7 +96,7 @@ def objective(trial):
             if batch_idx * BATCHSIZE >= N_TRAIN_EXAMPLES:
                 break
 
-            data, target = data.view(data.size(0), -1).to(DEVICE), target.to(DEVICE)
+            data, target = data.to(DEVICE), target.to(DEVICE)
 
             optimizer.zero_grad()
             output = model(data)
